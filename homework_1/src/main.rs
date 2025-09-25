@@ -6,9 +6,6 @@ fn fahrenheit_to_celsius(f: f64) -> f64 {
     (f - FREEZING_POINT_F) * 5.0 / 9.0
 }
 
-//fn celsius_to_fahrenheit(c: f64) -> f64 {
-//    c * 9.0 / 5.0 + FREEZING_POINT_F
-//}
 
 fn temperature_converter() {
     println!("--- Assignment 1: Temperature Converter ---");
