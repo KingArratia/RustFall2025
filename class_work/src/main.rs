@@ -9,10 +9,8 @@ struct Book {
 }
 
 fn save_books(books: &Vec<Book>, filename: &str) {
-    // Create (or overwrite) the file
     let mut file = File::create(filename).expect("Unable to create file");
 
-    // Write each book on a separate line: title,author,year
     for book in books {
         writeln!(file, "{},{},{}", book.title, book.author, book.year)
             .expect("Unable to write to file");
@@ -20,13 +18,11 @@ fn save_books(books: &Vec<Book>, filename: &str) {
 }
 
 fn load_books(filename: &str) -> Vec<Book> {
-    // Open the file for reading
     let file = File::open(filename).expect("Unable to open file");
     let reader = BufReader::new(file);
 
     let mut books = Vec::new();
 
-    // Read each line, split by commas, and parse into a Book
     for line in reader.lines() {
         if let Ok(entry) = line {
             let parts: Vec<&str> = entry.split(',').collect();
