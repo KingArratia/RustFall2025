@@ -1,49 +1,76 @@
+use std::fs::File;
+use std::io::{Write, BufReader, BufRead};
+use std::error::Error;
 
- // ==============================
-// Problem #1: String Concatenation with Borrowing
-// ==============================
-fn concat_strings(s1: &String, s2: &String) -> String {
-    let mut result = String::new();
-    result.push_str(s1);
-    result.push_str(s2);
-    result
+struct Book {
+    title: String,
+    author: String,
+    year: u16,
 }
 
-fn main() {
-    // Problem #1
-    let s1 = String::from("Hello, ");
-    let s2 = String::from("World!");
-    let result = concat_strings(&s1, &s2);
-    println!("Problem #1 Result: {}", result); 
-    
+fn save_books(books: &Vec<Book>, filename: &str) {
+    // Create (or overwrite) the file
+    let mut file = File::create(filename).expect("Unable to create file");
 
-    // ==============================
-    // Problem #2: Clone and Modify
-    // ==============================
-    fn clone_and_modify(s: &String) -> String {
-        let mut cloned = s.clone();
-        cloned.push_str("World!");
-        cloned
+    // Write each book on a separate line: title,author,year
+    for book in books {
+        writeln!(file, "{},{},{}", book.title, book.author, book.year)
+            .expect("Unable to write to file");
     }
+}
 
-    let s = String::from("Hello, ");
-    let modified = clone_and_modify(&s);
-    println!("Problem #2 Original: {}", s);
-    println!("Problem #2 Modified: {}", modified); 
+fn load_books(filename: &str) -> Vec<Book> {
+    // Open the file for reading
+    let file = File::open(filename).expect("Unable to open file");
+    let reader = BufReader::new(file);
 
-    // ==============================
-    // Problem #3: Mutable Reference Sum
-    // ==============================
-    fn sum(total: &mut i32, low: i32, high: i32) {
-        let mut acc = 0;
-        for i in low..=high {
-            acc += i;
+    let mut books = Vec::new();
+
+    // Read each line, split by commas, and parse into a Book
+    for line in reader.lines() {
+        if let Ok(entry) = line {
+            let parts: Vec<&str> = entry.split(',').collect();
+            if parts.len() == 3 {
+                let title = parts[0].to_string();
+                let author = parts[1].to_string();
+                let year: u16 = parts[2].trim().parse().unwrap_or(0);
+                books.push(Book { title, author, year });
+            }
         }
-        *total = acc; 
     }
 
-    let mut total = 0;
-    sum(&mut total, 0, 100);
-    println!("Problem #3 Sum from 0 to 100: {}", total); 
-    
+    books
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let books = vec![
+        Book {
+            title: "1984".to_string(),
+            author: "George Orwell".to_string(),
+            year: 1949,
+        },
+        Book {
+            title: "To Kill a Mockingbird".to_string(),
+            author: "Harper Lee".to_string(),
+            year: 1960,
+        },
+        Book {
+            title: "The Catcher in the Rye".to_string(),
+            author: "J.D. Salinger".to_string(),
+            year: 1951,
+        },
+    ];
+
+    // Save books to a file
+    save_books(&books, "books.txt");
+    println!("Books saved to file.");
+
+    // Load them back
+    let loaded_books = load_books("books.txt");
+    println!("\nLoaded books:");
+    for book in loaded_books {
+        println!("{} by {}, published in {}", book.title, book.author, book.year);
+    }
+
+    Ok(())
 }
