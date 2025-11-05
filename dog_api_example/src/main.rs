@@ -2,7 +2,6 @@ use serde::Deserialize;
 use std::error::Error;
 use std::fs::{create_dir_all, File};
 use std::io::copy;
-use std::path::Path;
 use std::time::Duration;
 
 #[derive(Debug, Deserialize)]
@@ -62,7 +61,7 @@ fn download_image(url: &str, filename: &str) -> Result<(), FetchError> {
 
     let mut reader = response.into_reader();
     let mut file = File::create(filename).map_err(|e| FetchError::IoError(e.to_string()))?;
-    copy(&mut reader, &mut file).map_err(|e| FetchError::IoError(e.to_string()))?;
+    let _bytes_copied = copy(&mut reader, &mut file).map_err(|e| FetchError::IoError(e.to_string()))?;
     Ok(())
 }
 
@@ -70,7 +69,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("🐕 Random Dog Image Downloader");
     println!("==============================\n");
 
-    // Create output directory
     create_dir_all("images").map_err(|e| FetchError::IoError(e.to_string()))?;
 
     for i in 1..=5 {
