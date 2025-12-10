@@ -39,6 +39,7 @@ pub fn analyze_file(entry: DirEntry) -> FileAnalysis {
     let mut stats = FileStats::default();
     let mut errors = Vec::new();
     
+    // 1. Get file metadata (size)
     match fs::metadata(path) {
         Ok(meta) => {
             stats.size_bytes = meta.len();
@@ -54,23 +55,25 @@ pub fn analyze_file(entry: DirEntry) -> FileAnalysis {
         }
     }
 
+    // 2. Read file content
     match fs::File::open(path).and_then(|mut f| {
         let mut content = String::new();
         f.read_to_string(&mut content).map(|_| content)
     }) {
         Ok(content) => {
+            // 3. Line Count
             stats.line_count = content.lines().count();
             
-            let mut word_count = 0;
-            for word in content.split_whitespace() {
-                word_count += 1;
-                for ch in word.chars() {
-                    *stats.char_frequencies.entry(ch).or_insert(0) += 1;
-                }
+            // 4. Word Count (Corrected to use the count() method)
+            stats.word_count = content.split_whitespace().count();
+            
+            // 5. Character Frequency (Corrected: Runs once over the whole content)
+            for ch in content.chars() {
+                *stats.char_frequencies.entry(ch).or_insert(0) += 1;
             }
-            stats.word_count = word_count;
         }
         Err(e) => {
+            // Handle file read/UTF-8 decoding error
             errors.push(ProcessingError::Io(e));
         }
     }

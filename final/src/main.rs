@@ -3,7 +3,7 @@ use std::process;
 use rayon::prelude::*;
 use walkdir::{WalkDir, DirEntry}; 
 
-// FIX: Import from the package name 'final'
+// Using the raw identifier r#final to escape the reserved keyword
 use r#final::{analyze_file, FileAnalysis, ProcessingError};
 
 const DEFAULT_PATH: &str = ".";
@@ -17,7 +17,6 @@ fn main() {
     
     let num_threads = rayon::current_num_threads();
     println!("Using Rayon thread pool with {} worker threads.", num_threads);
-    
 
     // --- File Discovery ---
     let entries: Vec<DirEntry> = WalkDir::new(path_to_process)
@@ -25,10 +24,18 @@ fn main() {
         .filter_map(|e| {
             match e {
                 Ok(entry) => {
+                    let path = entry.path();
+                    
+                    // FIX: Filtering Logic to skip 'target' directory (TA recommendation)
+                    if path.components().any(|c| c.as_os_str() == "target") {
+                        return None;
+                    }
+                    
+                    // Only keep files
                     if entry.file_type().is_file() {
                         Some(entry)
                     } else {
-                        None
+                        None // Skip directories, symlinks, etc.
                     }
                 }
                 Err(e) => {
@@ -45,8 +52,9 @@ fn main() {
         process::exit(0);
     }
     println!("Found {} files. Starting parallel processing...", total_files);
-
+    
     // --- Parallel Processing ---
+    // Rayon uses the thread pool implicitly here. 
     let results: Vec<FileAnalysis> = entries
         .into_par_iter()
         .map(analyze_file)
